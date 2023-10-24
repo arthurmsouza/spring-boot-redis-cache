@@ -31,9 +31,6 @@ public class SpringFoxConfiguration extends WebMvcConfigurationSupport {
 				.title("Spring Boot Redis Cache")
 				.description("\"Spring Boot REST API for Spring Boot Redis Cache\"")
 				.version("0.0.1")
-				//.license("Apache License Version 2.0")
-				//.licenseUrl("https://www.apache.org/licenses/LICENSE-2.0\"")
-				.contact(new Contact("Erkan Güzeler", "https://github.com/coderkan", "erkanguzeler@gmail.com"))
 				.build();
 	}
 

@@ -2,7 +2,7 @@ version: '3'
 
 services:
   db:
-    image: "postgres"
+    image: "postgres:14.1-alpine"
     ports:
       - "5432:5432"
     environment:
@@ -10,22 +10,43 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ekoloji
   cache:
-    image: "redis"
+    image: "redis:alpine"
+    command: redis-server
     ports: 
       - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - redis-conf:/usr/local/etc/redis/redis.conf
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
       - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
-  app:
-    build: .
+  #app:
+  #  build: .
+  #  ports:
+  #    - "8080:8080"
+  #  environment:
+  #    SPRING_DATASOURCE_URL: jdbc:postgresql://db/postgres
+  #    SPRING_DATASOURCE_USERNAME: postgres
+  #    SPRING_DATASOURCE_PASSWORD: ekoloji
+  #    SPRING_REDIS_HOST: cache
+  #    SPRING_REDIS_PORT: 6379
+  #  depends_on:
+  #    - db
+  #    - cache
+  grafana:
+    image: grafana/grafana-enterprise
+    container_name: grafana
+    restart: unless-stopped
+    # if you are running as root then set it to 0
+    # else find the right id with the id -u command
+    user: '0'
     ports:
-      - "8080:8080"
+      - '3000:3000'
+    # adding the mount volume point which we create earlier
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db/postgres
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: ekoloji
-      SPRING_REDIS_HOST: cache
-      SPRING_REDIS_PORT: 6379
-    depends_on:
-      - db
-      - cache
+      - GF_INSTALL_PLUGINS=redis-app,redis-explorer-app
+    volumes:
+      - '$PWD/data:/var/lib/grafana'
+volumes:
+  redis-data:
+  redis-conf:

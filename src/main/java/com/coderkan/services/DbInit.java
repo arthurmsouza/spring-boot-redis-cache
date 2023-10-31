@@ -9,11 +9,16 @@ import com.coderkan.repositories.OperationRepository;
 import com.coderkan.repositories.UserRepository;
 import com.coderkan.repositories.WalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.logging.Logger;
 
 @Component
@@ -29,6 +34,10 @@ public class DbInit {
 
     @Autowired
     private OperationRepository operationRepository;
+
+    @Autowired
+    private CacheManager cacheManager;
+
 
     private static final Logger LOGGER
                 = Logger.getLogger(DbInit.class.getName());
@@ -136,17 +145,53 @@ public class DbInit {
         operationBobToCarlosBitcoin.setAsset(assetBitcoin);
         operationRepository.save(operationBobToCarlosBitcoin);
 
+        //Pre-loading Redis Cache
+        List<Wallet> wallets = this.walletRepository.findAll();
+        Cache cache = cacheManager.getCache("wallets");
+        //Approach one: Caching the Entire List (when the list is not large)
+        cache.put("listWallets", wallets);
+        //Approach two: Each Item Individually
+        for(Wallet wallet : wallets) {
+            cache.put(wallet.getId(), wallet);
+        }
+
+        List<Operation> operations = this.operationRepository.findAll();
+        cache = cacheManager.getCache("operations");
+        //Approach one: Caching the Entire List (when the list is not large)
+        cache.put("listOperations", operations);
+        //Approach two: Each Item Individually
+        for(Operation operation : operations) {
+            cache.put(operation.getId(), operation);
+        }
+
+        List<User> users = this.userRepository.findAll();
+        cache = cacheManager.getCache("users");
+        //Approach one: Caching the Entire List (when the list is not large)
+        cache.put("listUsers", users);
+        //Approach two: Each Item Individually
+        for(User user : users) {
+            cache.put(user.getId(), user);
+        }
+
+        LOGGER.info("Redis pre loading - initialized");
         LOGGER.info("Asset DB initialized (PostContruct invoked)");
 
     }
 
     @PreDestroy
     private void destroy(){
+        //Clean up cache
+        cacheManager.getCache("wallets").clear();
+        cacheManager.getCache("operations").clear();
+        cacheManager.getCache("users").clear();
 
+        //Clean up database
         operationRepository.deleteAll();
         walletRepository.deleteAll();
         assetRepository.deleteAll();
         userRepository.deleteAll();
+
+
 
 
         LOGGER.info("Asset DB destroyed (PreDestroy invoked)");

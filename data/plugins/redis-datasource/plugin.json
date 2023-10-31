@@ -63,8 +63,8 @@
         "path": "img/variables.png"
       }
     ],
-    "updated": "2023-07-12",
-    "version": "2.2.0"
+    "updated": "2022-01-19",
+    "version": "2.1.1"
   },
   "metrics": true,
   "name": "Redis",

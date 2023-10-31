@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import javax.annotation.PostConstruct;
 
+import com.coderkan.services.DbInit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -24,6 +25,7 @@ import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import java.util.logging.Logger;
 
 //@Profile("!dev")
 @Configuration
@@ -39,6 +41,9 @@ public class RedisConfig {
 
 	@Value("${spring.redis.port}")
 	private int redisPort;
+
+	private static final Logger LOGGER
+			= Logger.getLogger(DbInit.class.getName());
 
 	@Bean
 	public RedisTemplate<String, Serializable> redisCacheTemplate(LettuceConnectionFactory redisConnectionFactory) {
@@ -68,6 +73,8 @@ public class RedisConfig {
 		Jedis jedis = new Jedis(redisHost, redisPort, 1000);
 		jedis.flushAll();
 		jedis.close();
+		LOGGER.info("RedisConfig (PostContruct invoked)");
+
 	}
 
 }
